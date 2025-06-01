@@ -4,6 +4,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 import json
 import uvicorn
+import os # Import os for environment variables
+from dotenv import load_dotenv # Import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
 
 app = FastAPI(
     title="Bookmark API",
@@ -12,10 +16,18 @@ app = FastAPI(
 )
 
 # CORS Configuration
-origins = [
-    "chrome-extension://allflgijbfmalphcpjomafeicjnabmbe", # Your specific Chrome extension origin
-    # You could also add "http://localhost:3000" if you have a local web UI for testing, for example
-]
+CHROME_EXTENSION_ID_FROM_ENV = os.getenv("CHROME_EXTENSION_ORIGIN")
+
+origins = []
+if CHROME_EXTENSION_ID_FROM_ENV:
+    origins.append(CHROME_EXTENSION_ID_FROM_ENV)
+    print(f"CORS: Allowing origin from .env: {CHROME_EXTENSION_ID_FROM_ENV}")
+else:
+    print("Warning: CHROME_EXTENSION_ORIGIN not found in .env. Using default fallback.")
+    origins.append("chrome-extension://allflgijbfmalphcpjomafeicjnabmbe") # Default fallback
+
+# You could also add "http://localhost:3000" if you have a local web UI for testing, for example
+# origins.append("http://localhost:3000")
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,8 +71,6 @@ async def receive_bookmarks_endpoint(bookmarks_payload: List[BookmarkItem]):
         return {"message": "Bookmarks received successfully by FastAPI!", "count": len(bookmarks_data)}
     except Exception as e:
         print(f"Error processing bookmarks: {e}")
-        # Pydantic validation errors are automatically handled by FastAPI,
-        # returning a 422 Unprocessable Entity response.
         # This catch is for other unexpected errors during your processing logic.
         raise HTTPException(status_code=500, detail=f"Error processing bookmarks: {str(e)}")
 
