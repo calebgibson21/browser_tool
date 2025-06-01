@@ -1,0 +1,10 @@
+
+# venv
+/browser_tool_env
+
+# text files
+.txt 
+
+# env 
+.env
+
