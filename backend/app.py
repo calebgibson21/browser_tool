@@ -18,13 +18,7 @@ app = FastAPI(
 # CORS Configuration
 CHROME_EXTENSION_ID_FROM_ENV = os.getenv("CHROME_EXTENSION_ORIGIN")
 
-origins = []
-if CHROME_EXTENSION_ID_FROM_ENV:
-    origins.append(CHROME_EXTENSION_ID_FROM_ENV)
-    print(f"CORS: Allowing origin from .env: {CHROME_EXTENSION_ID_FROM_ENV}")
-else:
-    print("Warning: CHROME_EXTENSION_ORIGIN not found in .env. Using default fallback.")
-    origins.append("chrome-extension://allflgijbfmalphcpjomafeicjnabmbe") # Default fallback
+origins = [CHROME_EXTENSION_ID_FROM_ENV]
 
 # You could also add "http://localhost:3000" if you have a local web UI for testing, for example
 # origins.append("http://localhost:3000")
