@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import json
-from starlette.types import Lifespan
 import uvicorn
 import os # Import os for environment variables
 from dotenv import load_dotenv # Import load_dotenv
@@ -47,9 +46,6 @@ CHROME_EXTENSION_ID_FROM_ENV = os.getenv("CHROME_EXTENSION_ORIGIN")
 
 origins = [CHROME_EXTENSION_ID_FROM_ENV]
 
-# You could also add "http://localhost:3000" if you have a local web UI for testing, for example
-# origins.append("http://localhost:3000")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # List of origins that are allowed to make requests
@@ -59,7 +55,6 @@ app.add_middleware(
 )
 
 # Define a Pydantic model for a single bookmark item
-# This structure should match the objects in the flattenedBookmarks array
 class BookmarkItem(BaseModel):
     id: str
     title: str
@@ -68,8 +63,6 @@ class BookmarkItem(BaseModel):
     index: Optional[int] = None
     dateAdded: Optional[float] = None
     dateGroupModified: Optional[float] = None
-    # Allow any other fields that might come from chrome.bookmarks.BookmarkTreeNode
-    # by using model_extra. This is a Pydantic V2 feature.
     class Config:
         extra = 'allow'
 
@@ -103,6 +96,4 @@ async def read_root():
     return {"message": "Bookmark API is running with FastAPI!"}
 
 if __name__ == "__main__":
-    # This allows running the app with `python app.py` for development.
-    # For production, Uvicorn should be run directly: `uvicorn app:app --reload --port 5000`
     uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
