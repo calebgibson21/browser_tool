@@ -3,17 +3,44 @@ from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import json
+from starlette.types import Lifespan
 import uvicorn
 import os # Import os for environment variables
 from dotenv import load_dotenv # Import load_dotenv
+import pymysql
+from contextlib import asynccontextmanager
 
 load_dotenv() # Load environment variables from .env file
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # START-UP – open connection (or a pool)
+    app.state.db = pymysql.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "bookmark_user"),
+        password=os.getenv("DB_PASSWORD", "secret"),
+        database=os.getenv("DB_NAME", "bookmarks_db"),
+        cursorclass=pymysql.cursors.DictCursor,
+    )
+    print("Connected to DB")
+    try:
+        yield               # ‼️ FastAPI starts serving requests here
+    finally:
+        # SHUT-DOWN – close connection
+        app.state.db.close()
+        print("Shutting down DB")
+
+# ────────────────────────────── APP SETUP ────────────────────────────────
 app = FastAPI(
     title="Bookmark API",
     description="API for receiving and processing browser bookmarks.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,     # ← pass the handler
 )
+
+# Dependency to get the connection
+def get_db():
+    return app.state.db
 
 # CORS Configuration
 CHROME_EXTENSION_ID_FROM_ENV = os.getenv("CHROME_EXTENSION_ORIGIN")
